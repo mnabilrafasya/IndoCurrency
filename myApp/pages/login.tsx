@@ -1,153 +1,388 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView, Alert } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { useNavigation } from "@react-navigation/native";
+// import React, { useState } from 'react';
+// import {
+//   View,
+//   Text,
+//   TextInput,
+//   TouchableOpacity,
+//   KeyboardAvoidingView,
+//   Platform,
+//   ScrollView,
+//   Alert,
+// } from 'react-native';
+// import { useNavigation } from '@react-navigation/native';
+// import { useDispatch, useSelector } from 'react-redux';
+// import { login } from '../../store/slices/authSlice';
+// import { AppDispatch, RootState } from '../../store/store';
+// import { StyleSheet } from 'react-native';
+
+// const Login: React.FC = () => {
+//   const navigation = useNavigation();
+//   const dispatch = useDispatch<AppDispatch>();
+//   const { loading } = useSelector((state: RootState) => state.auth);
+
+//   const [email, setEmail] = useState('');
+//   const [password, setPassword] = useState('');
+//   const [showPassword, setShowPassword] = useState(false);
+
+//   const handleLogin = async () => {
+//     if (!email || !password) {
+//       Alert.alert('Error', 'Email dan password harus diisi');
+//       return;
+//     }
+
+//     try {
+//       await dispatch(login({ email, password })).unwrap();
+//       // Navigation akan otomatis handle oleh auth state
+//     } catch (error: any) {
+//       Alert.alert('Login Gagal', error.message || 'Email atau password salah');
+//     }
+//   };
+
+//   return (
+//     <KeyboardAvoidingView
+//       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+//       style={styles.container}
+//     >
+//       <ScrollView contentContainerStyle={styles.scrollContent}>
+//         <View style={styles.header}>
+//           <Text style={styles.logo}>💰</Text>
+//           <Text style={styles.title}>Catatan Keuangan</Text>
+//           <Text style={styles.subtitle}>Kelola keuangan dengan mudah</Text>
+//         </View>
+
+//         <View style={styles.form}>
+//           <View style={styles.inputGroup}>
+//             <Text style={styles.label}>Email</Text>
+//             <TextInput
+//               style={styles.input}
+//               placeholder="nama@email.com"
+//               value={email}
+//               onChangeText={setEmail}
+//               keyboardType="email-address"
+//               autoCapitalize="none"
+//               autoCorrect={false}
+//             />
+//           </View>
+
+//           <View style={styles.inputGroup}>
+//             <Text style={styles.label}>Password</Text>
+//             <View style={styles.passwordContainer}>
+//               <TextInput
+//                 style={styles.passwordInput}
+//                 placeholder="••••••••"
+//                 value={password}
+//                 onChangeText={setPassword}
+//                 secureTextEntry={!showPassword}
+//                 autoCapitalize="none"
+//               />
+//               <TouchableOpacity
+//                 style={styles.eyeButton}
+//                 onPress={() => setShowPassword(!showPassword)}
+//               >
+//                 <Text style={styles.eyeIcon}>{showPassword ? '👁️' : '👁️‍🗨️'}</Text>
+//               </TouchableOpacity>
+//             </View>
+//           </View>
+
+//           <TouchableOpacity
+//             style={styles.forgotPassword}
+//             onPress={() => navigation.navigate('ForgotPassword' as never)}
+//           >
+//             <Text style={styles.forgotPasswordText}>Lupa Password?</Text>
+//           </TouchableOpacity>
+
+//           <TouchableOpacity
+//             style={[styles.button, loading && styles.buttonDisabled]}
+//             onPress={handleLogin}
+//             disabled={loading}
+//           >
+//             <Text style={styles.buttonText}>
+//               {loading ? 'Memproses...' : 'Masuk'}
+//             </Text>
+//           </TouchableOpacity>
+
+//           <View style={styles.divider}>
+//             <View style={styles.dividerLine} />
+//             <Text style={styles.dividerText}>atau</Text>
+//             <View style={styles.dividerLine} />
+//           </View>
+
+//           <TouchableOpacity
+//             style={styles.registerLink}
+//             onPress={() => navigation.navigate('Register' as never)}
+//           >
+//             <Text style={styles.registerText}>
+//               Belum punya akun?{' '}
+//               <Text style={styles.registerTextBold}>Daftar Sekarang</Text>
+//             </Text>
+//           </TouchableOpacity>
+//         </View>
+//       </ScrollView>
+//     </KeyboardAvoidingView>
+//   );
+// };
+
+// export default Login;
+
+// export const styles = {
+//   container: {
+//     flex: 1,
+//     backgroundColor: "#FFFFFF", // colors.card
+//   },
+//   scrollContent: {
+//     flexGrow: 1,
+//     padding: 24, // spacing.xl
+//   },
+//   header: {
+//     alignItems: "center",
+//     marginTop: 48, // spacing['3xl']
+//     marginBottom: 48,
+//   },
+//   logo: {
+//     fontSize: 48, // typography.fontSize['6xl']
+//     marginBottom: 8, // spacing.base
+//   },
+//   title: {
+//     fontSize: 28, // typography.fontSize['3xl']
+//     fontWeight: "700", // bold
+//     color: "#1A1A1A", // colors.text
+//     marginBottom: 6, // spacing.sm
+//   },
+//   subtitle: {
+//     fontSize: 16, // base
+//     color: "#6B7280", // colors.textSecondary
+//   },
+//   form: {
+//     flex: 1,
+//   },
+//   inputGroup: {
+//     marginBottom: 20, // spacing.lg
+//   },
+//   label: {
+//     fontSize: 14, // sm
+//     fontWeight: "600", // semibold
+//     color: "#1A1A1A",
+//     marginBottom: 6,
+//   },
+//   input: {
+//     borderWidth: 1,
+//     borderColor: "#E5E7EB", // border
+//     borderRadius: 12,
+//     padding: 12, // spacing.base
+//     fontSize: 16,
+//     backgroundColor: "#F9FAFB", // backgroundLight
+//   },
+//   passwordContainer: {
+//     flexDirection: "row",
+//     alignItems: "center",
+//     borderWidth: 1,
+//     borderColor: "#E5E7EB",
+//     borderRadius: 12,
+//     backgroundColor: "#F9FAFB",
+//   },
+//   passwordInput: {
+//     flex: 1,
+//     padding: 12,
+//     fontSize: 16,
+//   },
+//   eyeButton: {
+//     padding: 12,
+//   },
+//   eyeIcon: {
+//     fontSize: 20,
+//   },
+//   forgotPassword: {
+//     alignSelf: "flex-end",
+//     marginBottom: 24, // spacing.xl
+//   },
+//   forgotPasswordText: {
+//     color: "#3B82F6", // primary
+//     fontSize: 14,
+//     fontWeight: "600",
+//   },
+//   button: {
+//     backgroundColor: "#3B82F6",
+//     padding: 18,
+//     borderRadius: 12,
+//     alignItems: "center",
+//     shadowColor: "#3B82F6",
+//     shadowOffset: { width: 0, height: 4 },
+//     shadowOpacity: 0.3,
+//     shadowRadius: 8,
+//     elevation: 4,
+//   },
+//   buttonDisabled: {
+//     opacity: 0.6,
+//   },
+//   buttonText: {
+//     color: "#FFFFFF",
+//     fontSize: 16,
+//     fontWeight: "700",
+//   },
+//   divider: {
+//     flexDirection: "row",
+//     alignItems: "center",
+//     marginVertical: 24,
+//   },
+//   dividerLine: {
+//     flex: 1,
+//     height: 1,
+//     backgroundColor: "#E5E7EB",
+//   },
+//   dividerText: {
+//     marginHorizontal: 12,
+//     color: "#9CA3AF", // textLight
+//     fontSize: 14,
+//   },
+//   registerLink: {
+//     alignItems: "center",
+//     marginTop: 12,
+//   },
+//   registerText: {
+//     fontSize: 14,
+//     color: "#6B7280",
+//   },
+//   registerTextBold: {
+//     color: "#3B82F6",
+//     fontWeight: "700",
+//   },
+// };
+
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Alert,
+  StyleSheet,
+} from 'react-native';
 
 export default function Login() {
-  const navigation = useNavigation();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = () => {
     if (!email || !password) {
-      Alert.alert("Error", "Email dan password harus diisi!");
+      Alert.alert('Error', 'Email dan password harus diisi');
       return;
     }
-
-    // Simulasi login - ganti dengan API call
-    if (email && password) {
-      Alert.alert("Sukses", "Login berhasil!", [
-        {
-          text: "OK",
-          onPress: () => navigation.navigate("Home" as never),
-        },
-      ]);
-    }
+    Alert.alert("Login", `Email: ${email}\nPassword: ${password}`);
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.keyboardView}>
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-          {/* Header Section */}
-          <View style={styles.header}>
-            <LinearGradient colors={["#6366f1", "#9333ea"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.logoContainer}>
-              <Text style={styles.logoIcon}>💰</Text>
-            </LinearGradient>
-            <Text style={styles.title}>Selamat Datang!</Text>
-            <Text style={styles.subtitle}>Masuk untuk mengelola keuangan Anda</Text>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
+          <Text style={styles.logo}>💰</Text>
+          <Text style={styles.title}>Catatan Keuangan</Text>
+          <Text style={styles.subtitle}>Kelola keuangan dengan mudah</Text>
+        </View>
+
+        <View style={styles.form}>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Email</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="nama@email.com"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
           </View>
 
-          {/* Form Section */}
-          <View style={styles.formContainer}>
-            {/* Email Input */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email</Text>
-              <View style={styles.inputWrapper}>
-                <Text style={styles.inputIcon}>📧</Text>
-                <TextInput style={styles.input} placeholder="nama@email.com" placeholderTextColor="#9ca3af" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" />
-              </View>
-            </View>
-
-            {/* Password Input */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Password</Text>
-              <View style={styles.inputWrapper}>
-                <Text style={styles.inputIcon}>🔒</Text>
-                <TextInput style={styles.input} placeholder="Masukkan password" placeholderTextColor="#9ca3af" value={password} onChangeText={setPassword} secureTextEntry={!showPassword} autoCapitalize="none" />
-                <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeButton}>
-                  <Text style={styles.eyeIcon}>{showPassword ? "👁️" : "👁️‍🗨️"}</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* Forgot Password */}
-            <TouchableOpacity style={styles.forgotPassword}>
-              <Text style={styles.forgotPasswordText}>Lupa Password?</Text>
-            </TouchableOpacity>
-
-            {/* Login Button */}
-            <TouchableOpacity onPress={handleLogin} activeOpacity={0.8} style={styles.loginButton}>
-              <LinearGradient colors={["#6366f1", "#9333ea"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.loginButtonGradient}>
-                <Text style={styles.loginButtonText}>Masuk</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-
-            {/* Divider */}
-            <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>atau</Text>
-              <View style={styles.dividerLine} />
-            </View>
-
-            {/* Social Login Buttons */}
-            <View style={styles.socialButtons}>
-              <TouchableOpacity style={styles.socialButton} activeOpacity={0.7}>
-                <Text style={styles.socialIcon}>🔵</Text>
-                <Text style={styles.socialButtonText}>Google</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.socialButton} activeOpacity={0.7}>
-                <Text style={styles.socialIcon}>📘</Text>
-                <Text style={styles.socialButtonText}>Facebook</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Register Link */}
-            <View style={styles.registerContainer}>
-              <Text style={styles.registerText}>Belum punya akun? </Text>
-              <TouchableOpacity onPress={() => navigation.navigate("Register" as never)}>
-                <Text style={styles.registerLink}>Daftar Sekarang</Text>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Password</Text>
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="••••••••"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+              />
+              <TouchableOpacity
+                style={styles.eyeButton}
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                <Text style={styles.eyeIcon}>
+                  {showPassword ? '👁️' : '👁️‍🗨️'}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+
+          <TouchableOpacity
+            style={styles.forgotPassword}
+            onPress={() => Alert.alert("Info", "Halaman lupa password belum dibuat")}
+          >
+            <Text style={styles.forgotPasswordText}>Lupa Password?</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.button} onPress={handleLogin}>
+            <Text style={styles.buttonText}>Masuk</Text>
+          </TouchableOpacity>
+
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>atau</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <TouchableOpacity
+            style={styles.registerLink}
+            onPress={() => Alert.alert("Info", "Halaman register belum dibuat")}
+          >
+            <Text style={styles.registerText}>
+              Belum punya akun?{' '}
+              <Text style={styles.registerTextBold}>Daftar Sekarang</Text>
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8fafc",
-  },
-  keyboardView: {
-    flex: 1,
+    backgroundColor: "#FFFFFF",
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingVertical: 40,
+    padding: 24,
   },
   header: {
     alignItems: "center",
-    marginBottom: 40,
+    marginTop: 48,
+    marginBottom: 48,
   },
-  logoContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  logoIcon: {
-    fontSize: 40,
+  logo: {
+    fontSize: 48,
+    marginBottom: 8,
   },
   title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#1f2937",
-    marginBottom: 8,
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#1A1A1A",
+    marginBottom: 6,
   },
   subtitle: {
     fontSize: 16,
-    color: "#6b7280",
-    textAlign: "center",
+    color: "#6B7280",
   },
-  formContainer: {
+  form: {
     flex: 1,
   },
   inputGroup: {
@@ -156,35 +391,32 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#374151",
-    marginBottom: 8,
-  },
-  inputWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "white",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    paddingHorizontal: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  inputIcon: {
-    fontSize: 20,
-    marginRight: 12,
+    color: "#1A1A1A",
+    marginBottom: 6,
   },
   input: {
-    flex: 1,
-    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 12,
+    padding: 12,
     fontSize: 16,
-    color: "#1f2937",
+    backgroundColor: "#F9FAFB",
+  },
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 12,
+    backgroundColor: "#F9FAFB",
+  },
+  passwordInput: {
+    flex: 1,
+    padding: 12,
+    fontSize: 16,
   },
   eyeButton: {
-    padding: 4,
+    padding: 12,
   },
   eyeIcon: {
     fontSize: 20,
@@ -194,76 +426,47 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   forgotPasswordText: {
-    color: "#6366f1",
+    color: "#3B82F6",
     fontSize: 14,
     fontWeight: "600",
   },
-  loginButton: {
+  button: {
+    backgroundColor: "#3B82F6",
+    padding: 18,
     borderRadius: 12,
-    overflow: "hidden",
-    marginBottom: 24,
-  },
-  loginButtonGradient: {
-    paddingVertical: 16,
     alignItems: "center",
+    elevation: 4,
   },
-  loginButtonText: {
-    color: "white",
+  buttonText: {
+    color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: "700",
   },
   divider: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 24,
+    marginVertical: 24,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: "#e5e7eb",
+    backgroundColor: "#E5E7EB",
   },
   dividerText: {
-    marginHorizontal: 16,
-    color: "#9ca3af",
-    fontSize: 14,
-  },
-  socialButtons: {
-    flexDirection: "row",
-    gap: 12,
-    marginBottom: 24,
-  },
-  socialButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "white",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    paddingVertical: 14,
-    gap: 8,
-  },
-  socialIcon: {
-    fontSize: 20,
-  },
-  socialButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#374151",
-  },
-  registerContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  registerText: {
-    color: "#6b7280",
+    marginHorizontal: 12,
+    color: "#9CA3AF",
     fontSize: 14,
   },
   registerLink: {
-    color: "#6366f1",
+    alignItems: "center",
+    marginTop: 12,
+  },
+  registerText: {
     fontSize: 14,
-    fontWeight: "bold",
+    color: "#6B7280",
+  },
+  registerTextBold: {
+    color: "#3B82F6",
+    fontWeight: "700",
   },
 });

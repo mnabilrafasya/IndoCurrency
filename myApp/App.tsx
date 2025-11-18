@@ -1,8 +1,11 @@
-import React from "react";
+import { StatusBar } from "expo-status-bar";
+import { StyleSheet } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { StatusBar } from "expo-status-bar";
+
+import Home from "./pages/home";
 import Transaksi from "./pages/transaksi";
+
 import Login from "./pages/login";
 import Register from "./pages/register";
 
@@ -14,7 +17,7 @@ export default function App() {
       <StatusBar style="dark" />
       <NavigationContainer>
         <Stack.Navigator
-          initialRouteName="Transaksi"
+          initialRouteName="Home"
           screenOptions={{
             headerShown: false,
           }}
@@ -27,3 +30,5 @@ export default function App() {
     </>
   );
 }
+
+const styles = StyleSheet.create({});
