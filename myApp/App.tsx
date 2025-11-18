@@ -14,7 +14,7 @@ export default function App() {
       <StatusBar style="dark" />
       <NavigationContainer>
         <Stack.Navigator
-          initialRouteName="Home"
+          initialRouteName="Transaksi"
           screenOptions={{
             headerShown: false,
           }}
