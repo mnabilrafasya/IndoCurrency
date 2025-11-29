@@ -5,7 +5,6 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import Home from "./pages/home";
 import Transaksi from "./pages/transaksi";
-
 import Login from "./pages/login";
 import Register from "./pages/register";
 
@@ -15,15 +14,15 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="Transaksi"
+        initialRouteName="Login"
         screenOptions={{
           headerShown: false,
         }}
       >
-        <Stack.Screen name="Home" component={Home} />
-        <Stack.Screen name="Transaksi" component={Transaksi} />
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="Register" component={Register} />
+        <Stack.Screen name="Home" component={Home} />
+        <Stack.Screen name="Transaksi" component={Transaksi} />
       </Stack.Navigator>
 
       <StatusBar style="auto" />

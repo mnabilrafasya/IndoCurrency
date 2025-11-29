@@ -10,7 +10,7 @@ import transactionRoutes from "./routes/transaction.routes";
 dotenv.config();
 
 const app: Express = express();
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000; // Ubah ke Number
 
 // Middleware
 app.use(cors());
@@ -40,8 +40,11 @@ app.use((err: any, req: Request, res: Response, next: any) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+// Listen di 0.0.0.0 agar bisa diakses dari emulator
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`🚀 Server running on http://0.0.0.0:${PORT}`);
+  console.log(`📱 Emulator access: http://10.0.2.2:${PORT}/api/health`);
+  console.log(`💻 Browser access: http://localhost:${PORT}/api/health`);
 });
 
 export default app;
