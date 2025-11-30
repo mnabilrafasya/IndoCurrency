@@ -1,9 +1,10 @@
-// src/pages/home.tsx - Integrated with Backend API
+// src/pages/home.tsx - Fixed Total Saldo + Income/Expense
 
 import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert, RefreshControl } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { transactionAPI, accountAPI } from "../services/api";
+import { useNavigation } from "@react-navigation/native";
 
 interface User {
   id: string;
@@ -45,6 +46,8 @@ interface TransactionStats {
 }
 
 const Home = () => {
+  const navigation = useNavigation();
+
   const [user, setUser] = useState<User | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -81,14 +84,59 @@ const Home = () => {
       const startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
       const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
 
-      // Fetch data parallel
-      const [statsData, transactionsData, accountsData] = await Promise.all([transactionAPI.getStats({ startDate, endDate }), transactionAPI.getAll({ startDate, endDate }), accountAPI.getAll()]);
+      console.log("📅 Date range:", { startDate, endDate });
 
-      setStats(statsData);
-      setTransactions(transactionsData);
+      // Fetch accounts first
+      const accountsData = await accountAPI.getAll();
+
+      // Fetch ALL transactions (without date filter for now)
+      const allTransactions = await transactionAPI.getAll();
+
+      // Try to fetch stats with date range
+      let statsData;
+      try {
+        statsData = await transactionAPI.getStats({ startDate, endDate });
+      } catch (error) {
+        console.log("Stats API failed, calculating manually");
+        statsData = { totalIncome: 0, totalExpense: 0, totalBalance: 0 };
+      }
+
+      console.log("📊 Raw stats from API:", statsData);
+      console.log("📝 All transactions:", allTransactions.length);
+
+      // ✅ MANUAL CALCULATION: Hitung income & expense dari semua transaksi
+      const manualIncome = allTransactions.filter((t: Transaction) => t.type === "INCOME").reduce((sum: number, t: Transaction) => sum + Number(t.amount || 0), 0);
+
+      const manualExpense = allTransactions.filter((t: Transaction) => t.type === "EXPENSE").reduce((sum: number, t: Transaction) => sum + Number(t.amount || 0), 0);
+
+      // ✅ Hitung total saldo dari semua akun
+      const totalAccountBalance = accountsData.reduce((sum: number, account: Account) => {
+        return sum + (Number(account.balance) || 0);
+      }, 0);
+
+      // Use manual calculation if API stats is 0
+      const finalIncome = statsData.totalIncome || manualIncome;
+      const finalExpense = statsData.totalExpense || manualExpense;
+
+      setStats({
+        totalIncome: finalIncome,
+        totalExpense: finalExpense,
+        totalBalance: totalAccountBalance,
+      });
+
+      setTransactions(allTransactions);
       setAccounts(accountsData);
+
+      console.log("✅ Final stats:", {
+        income: finalIncome,
+        expense: finalExpense,
+        balance: totalAccountBalance,
+        fromAPI: statsData.totalIncome > 0 ? "API" : "Manual",
+        accountsCount: accountsData.length,
+        transactionsCount: allTransactions.length,
+      });
     } catch (error: any) {
-      console.error("Load data error:", error);
+      console.error("❌ Load data error:", error);
       Alert.alert("Error", error.response?.data?.error || "Gagal memuat data");
     } finally {
       setLoading(false);
@@ -102,8 +150,19 @@ const Home = () => {
   };
 
   const handleAddTransaction = () => {
-    console.log("Tambah transaksi");
-    // Navigate to AddTransaction screen
+    navigation.navigate("AddTransaction" as never);
+  };
+
+  const handleHistory = () => {
+    navigation.navigate("History" as never);
+  };
+
+  const handleReport = () => {
+    navigation.navigate("Report" as never);
+  };
+
+  const handleAccounts = () => {
+    navigation.navigate("Accounts" as never);
   };
 
   if (loading) {
@@ -165,21 +224,21 @@ const Home = () => {
           <Text style={styles.quickActionText}>Tambah</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.quickActionButton}>
+        <TouchableOpacity style={styles.quickActionButton} onPress={handleHistory}>
           <View style={styles.quickActionIcon}>
             <Text style={styles.quickActionEmoji}>📋</Text>
           </View>
           <Text style={styles.quickActionText}>Riwayat</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.quickActionButton}>
+        <TouchableOpacity style={styles.quickActionButton} onPress={handleReport}>
           <View style={styles.quickActionIcon}>
             <Text style={styles.quickActionEmoji}>📊</Text>
           </View>
           <Text style={styles.quickActionText}>Laporan</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.quickActionButton}>
+        <TouchableOpacity style={styles.quickActionButton} onPress={handleAccounts}>
           <View style={styles.quickActionIcon}>
             <Text style={styles.quickActionEmoji}>💳</Text>
           </View>
@@ -191,7 +250,9 @@ const Home = () => {
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Akun Keuangan</Text>
-          <Text style={styles.seeAll}>Lihat Semua →</Text>
+          <TouchableOpacity onPress={handleAccounts}>
+            <Text style={styles.seeAll}>Lihat Semua →</Text>
+          </TouchableOpacity>
         </View>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -202,7 +263,7 @@ const Home = () => {
               <View key={account.id} style={styles.accountCard}>
                 <Text style={styles.accountIcon}>{account.icon}</Text>
                 <Text style={styles.accountName}>{account.name}</Text>
-                <Text style={styles.accountBalance}>Rp {account.balance.toLocaleString("id-ID")}</Text>
+                <Text style={styles.accountBalance}>Rp {Number(account.balance).toLocaleString("id-ID")}</Text>
               </View>
             ))
           )}
@@ -213,7 +274,9 @@ const Home = () => {
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Transaksi Terbaru</Text>
-          <Text style={styles.seeAll}>Lihat Semua →</Text>
+          <TouchableOpacity onPress={handleHistory}>
+            <Text style={styles.seeAll}>Lihat Semua →</Text>
+          </TouchableOpacity>
         </View>
 
         {recentTransactions.length === 0 ? (
@@ -238,7 +301,8 @@ const Home = () => {
               </View>
 
               <Text style={[styles.transactionAmount, transaction.type === "INCOME" ? styles.incomeText : styles.expenseText]}>
-                {transaction.type === "INCOME" ? "+" : "-"}Rp {transaction.amount.toLocaleString("id-ID")}
+                {transaction.type === "INCOME" ? "+" : "-"}
+                Rp {transaction.amount.toLocaleString("id-ID")}
               </Text>
             </View>
           ))
