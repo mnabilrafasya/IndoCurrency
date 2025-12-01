@@ -1,26 +1,9 @@
-// Backend/src/middleware/auth.middleware.ts
+// Backend/src/middleware/auth.middleware.js
 
-import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
-import pool from "../config/database";
-import { RowDataPacket } from "mysql2";
+const jwt = require("jsonwebtoken");
+const pool = require("../config/database");
 
-// Extend Request interface untuk menambahkan userId
-export interface AuthRequest extends Request {
-  userId?: number;
-}
-
-interface User extends RowDataPacket {
-  id: number;
-  name: string;
-  email: string;
-}
-
-interface JwtPayload {
-  userId: number;
-}
-
-export const authMiddleware = async (req: AuthRequest, res: Response, next: NextFunction) => {
+const authMiddleware = async (req, res, next) => {
   try {
     // Ambil token dari header Authorization
     const authHeader = req.headers.authorization;
@@ -37,10 +20,10 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
     }
 
     // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "your-secret-key") as JwtPayload;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "your-secret-key");
 
     // Cek apakah user masih ada di database
-    const [users] = await pool.execute<User[]>("SELECT id, name, email FROM users WHERE id = ?", [decoded.userId]);
+    const [users] = await pool.execute("SELECT id, name, email FROM users WHERE id = ?", [decoded.userId]);
 
     if (users.length === 0) {
       return res.status(401).json({ error: "User tidak ditemukan" });
@@ -51,7 +34,7 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
 
     // Lanjutkan ke route handler
     next();
-  } catch (error: any) {
+  } catch (error) {
     console.error("Auth middleware error:", error.message);
 
     if (error.name === "JsonWebTokenError") {
@@ -65,3 +48,5 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
     return res.status(401).json({ error: "Autentikasi gagal" });
   }
 };
+
+module.exports = { authMiddleware };

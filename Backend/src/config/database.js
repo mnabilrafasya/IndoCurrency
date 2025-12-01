@@ -1,9 +1,7 @@
-// Backend/src/config/database.ts
+// Backend/src/config/database.js
 
-import mysql from "mysql2/promise";
-import dotenv from "dotenv";
-
-dotenv.config();
+const mysql = require("mysql2/promise");
+require("dotenv").config();
 
 // Create connection pool
 const pool = mysql.createPool({
@@ -27,4 +25,4 @@ pool
     console.error("❌ Database connection failed:", err.message);
   });
 
-export default pool;
+module.exports = pool;

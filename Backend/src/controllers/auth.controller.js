@@ -1,21 +1,11 @@
-// Backend/src/controllers/auth.controller.ts
+// Backend/src/controllers/auth.controller.js
 
-import { Request, Response } from "express";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import pool from "../config/database";
-import { RowDataPacket, ResultSetHeader } from "mysql2";
-
-interface User extends RowDataPacket {
-  id: number;
-  name: string;
-  email: string;
-  password: string;
-  created_at: Date;
-}
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const pool = require("../config/database");
 
 // Register
-export const register = async (req: Request, res: Response) => {
+const register = async (req, res) => {
   try {
     const { name, email, password, confirmPassword } = req.body;
 
@@ -33,7 +23,7 @@ export const register = async (req: Request, res: Response) => {
     }
 
     // Cek apakah email sudah terdaftar
-    const [existingUsers] = await pool.execute<User[]>("SELECT * FROM users WHERE email = ?", [email]);
+    const [existingUsers] = await pool.execute("SELECT * FROM users WHERE email = ?", [email]);
 
     if (existingUsers.length > 0) {
       return res.status(400).json({ error: "Email sudah terdaftar" });
@@ -43,7 +33,7 @@ export const register = async (req: Request, res: Response) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Insert user baru
-    const [result] = await pool.execute<ResultSetHeader>("INSERT INTO users (name, email, password) VALUES (?, ?, ?)", [name, email, hashedPassword]);
+    const [result] = await pool.execute("INSERT INTO users (name, email, password) VALUES (?, ?, ?)", [name, email, hashedPassword]);
 
     const userId = result.insertId;
 
@@ -66,7 +56,7 @@ export const register = async (req: Request, res: Response) => {
 };
 
 // Login
-export const login = async (req: Request, res: Response) => {
+const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -76,7 +66,7 @@ export const login = async (req: Request, res: Response) => {
     }
 
     // Cari user berdasarkan email
-    const [users] = await pool.execute<User[]>("SELECT * FROM users WHERE email = ?", [email]);
+    const [users] = await pool.execute("SELECT * FROM users WHERE email = ?", [email]);
 
     if (users.length === 0) {
       return res.status(401).json({ error: "Email atau password salah" });
@@ -110,11 +100,11 @@ export const login = async (req: Request, res: Response) => {
 };
 
 // Get Profile
-export const getProfile = async (req: Request, res: Response) => {
+const getProfile = async (req, res) => {
   try {
-    const userId = (req as any).userId;
+    const userId = req.userId;
 
-    const [users] = await pool.execute<User[]>("SELECT id, name, email, created_at FROM users WHERE id = ?", [userId]);
+    const [users] = await pool.execute("SELECT id, name, email, created_at FROM users WHERE id = ?", [userId]);
 
     if (users.length === 0) {
       return res.status(404).json({ error: "User tidak ditemukan" });
@@ -125,4 +115,10 @@ export const getProfile = async (req: Request, res: Response) => {
     console.error("Get profile error:", error);
     res.status(500).json({ error: "Terjadi kesalahan server" });
   }
+};
+
+module.exports = {
+  register,
+  login,
+  getProfile,
 };

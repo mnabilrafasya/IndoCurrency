@@ -1,28 +1,13 @@
-// Backend/src/controllers/account.controller.ts
+// Backend/src/controllers/account.controller.js
 
-import { Response } from "express";
-import pool from "../config/database";
-import { RowDataPacket, ResultSetHeader } from "mysql2";
-
-interface AuthRequest extends Request {
-  userId?: number;
-}
-
-interface Account extends RowDataPacket {
-  id: number;
-  user_id: number;
-  account_name: string;
-  account_type: string;
-  balance: number;
-  created_at: Date;
-}
+const pool = require("../config/database");
 
 // Get All Accounts
-export const getAccounts = async (req: any, res: Response) => {
+const getAccounts = async (req, res) => {
   try {
     const userId = req.userId;
 
-    const [accounts] = await pool.execute<Account[]>("SELECT * FROM accounts WHERE user_id = ? ORDER BY created_at DESC", [userId]);
+    const [accounts] = await pool.execute("SELECT * FROM accounts WHERE user_id = ? ORDER BY created_at DESC", [userId]);
 
     // Format response
     const formattedAccounts = accounts.map((account) => ({
@@ -42,12 +27,12 @@ export const getAccounts = async (req: any, res: Response) => {
 };
 
 // Get Account by ID
-export const getAccountById = async (req: any, res: Response) => {
+const getAccountById = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.userId;
 
-    const [accounts] = await pool.execute<Account[]>("SELECT * FROM accounts WHERE id = ? AND user_id = ?", [id, userId]);
+    const [accounts] = await pool.execute("SELECT * FROM accounts WHERE id = ? AND user_id = ?", [id, userId]);
 
     if (accounts.length === 0) {
       return res.status(404).json({ error: "Akun tidak ditemukan" });
@@ -71,7 +56,7 @@ export const getAccountById = async (req: any, res: Response) => {
 };
 
 // Create Account
-export const createAccount = async (req: any, res: Response) => {
+const createAccount = async (req, res) => {
   try {
     const userId = req.userId;
     const { name, type, balance = 0 } = req.body;
@@ -80,7 +65,7 @@ export const createAccount = async (req: any, res: Response) => {
       return res.status(400).json({ error: "Nama dan tipe akun harus diisi" });
     }
 
-    const [result] = await pool.execute<ResultSetHeader>("INSERT INTO accounts (user_id, account_name, account_type, balance) VALUES (?, ?, ?, ?)", [userId, name, type, balance]);
+    const [result] = await pool.execute("INSERT INTO accounts (user_id, account_name, account_type, balance) VALUES (?, ?, ?, ?)", [userId, name, type, balance]);
 
     const accountId = result.insertId;
 
@@ -101,22 +86,22 @@ export const createAccount = async (req: any, res: Response) => {
 };
 
 // Update Account
-export const updateAccount = async (req: any, res: Response) => {
+const updateAccount = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.userId;
     const { name, type, balance } = req.body;
 
     // Check if account exists and belongs to user
-    const [accounts] = await pool.execute<Account[]>("SELECT * FROM accounts WHERE id = ? AND user_id = ?", [id, userId]);
+    const [accounts] = await pool.execute("SELECT * FROM accounts WHERE id = ? AND user_id = ?", [id, userId]);
 
     if (accounts.length === 0) {
       return res.status(404).json({ error: "Akun tidak ditemukan" });
     }
 
     // Build update query dynamically
-    const updates: string[] = [];
-    const values: any[] = [];
+    const updates = [];
+    const values = [];
 
     if (name) {
       updates.push("account_name = ?");
@@ -140,7 +125,7 @@ export const updateAccount = async (req: any, res: Response) => {
     await pool.execute(`UPDATE accounts SET ${updates.join(", ")} WHERE id = ? AND user_id = ?`, values);
 
     // Get updated account
-    const [updatedAccounts] = await pool.execute<Account[]>("SELECT * FROM accounts WHERE id = ?", [id]);
+    const [updatedAccounts] = await pool.execute("SELECT * FROM accounts WHERE id = ?", [id]);
 
     const account = updatedAccounts[0];
     const formattedAccount = {
@@ -162,13 +147,13 @@ export const updateAccount = async (req: any, res: Response) => {
 };
 
 // Delete Account
-export const deleteAccount = async (req: any, res: Response) => {
+const deleteAccount = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.userId;
 
     // Check if account exists
-    const [accounts] = await pool.execute<Account[]>("SELECT * FROM accounts WHERE id = ? AND user_id = ?", [id, userId]);
+    const [accounts] = await pool.execute("SELECT * FROM accounts WHERE id = ? AND user_id = ?", [id, userId]);
 
     if (accounts.length === 0) {
       return res.status(404).json({ error: "Akun tidak ditemukan" });
@@ -185,8 +170,8 @@ export const deleteAccount = async (req: any, res: Response) => {
 };
 
 // Helper function to get icon based on account type
-function getAccountIcon(type: string): string {
-  const icons: { [key: string]: string } = {
+function getAccountIcon(type) {
+  const icons = {
     cash: "💵",
     bank: "🏦",
     ewallet: "📱",
@@ -197,3 +182,11 @@ function getAccountIcon(type: string): string {
   };
   return icons[type.toLowerCase()] || "💳";
 }
+
+module.exports = {
+  getAccounts,
+  getAccountById,
+  createAccount,
+  updateAccount,
+  deleteAccount,
+};

@@ -1,16 +1,15 @@
-// src/index.ts
+// Backend/src/index.js
 
-import express, { Express, Request, Response } from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-import authRoutes from "./routes/auth.routes";
-import accountRoutes from "./routes/account.routes";
-import transactionRoutes from "./routes/transaction.routes";
+const express = require("express");
+const cors = require("cors");
+require("dotenv").config();
 
-dotenv.config();
+const authRoutes = require("./routes/auth.routes");
+const accountRoutes = require("./routes/account.routes");
+const transactionRoutes = require("./routes/transaction.routes");
 
-const app: Express = express();
-const PORT = Number(process.env.PORT) || 3000; // Ubah ke Number
+const app = express();
+const PORT = Number(process.env.PORT) || 3000;
 
 // Middleware
 app.use(cors());
@@ -23,17 +22,17 @@ app.use("/api/accounts", accountRoutes);
 app.use("/api/transactions", transactionRoutes);
 
 // Health check
-app.get("/api/health", (req: Request, res: Response) => {
+app.get("/api/health", (req, res) => {
   res.json({ status: "ok", message: "Server is running" });
 });
 
 // 404 handler
-app.use((req: Request, res: Response) => {
+app.use((req, res) => {
   res.status(404).json({ error: "Route not found" });
 });
 
 // Error handling middleware
-app.use((err: any, req: Request, res: Response, next: any) => {
+app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(err.status || 500).json({
     error: err.message || "Internal Server Error",
@@ -47,4 +46,4 @@ app.listen(PORT, "0.0.0.0", () => {
   console.log(`💻 Browser access: http://localhost:${PORT}/api/health`);
 });
 
-export default app;
+module.exports = app;
