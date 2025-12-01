@@ -7,7 +7,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 // Untuk Android Emulator: http://10.0.2.2:3000/api
 // Untuk iOS Simulator: http://localhost:3000/api
 // Untuk Physical Device: http://192.168.x.x:3000/api (IP komputer)
-const API_URL = "http://192.168.100.16:3000/api";
+const API_URL = "http://10.226.221.44:3000/api";
 
 console.log("Using API URL:", API_URL);
 
