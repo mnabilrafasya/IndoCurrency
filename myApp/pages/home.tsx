@@ -1,536 +1,188 @@
-// import React, { useState } from 'react';
-// import {
-//   View,
-//   Text,
-//   TouchableOpacity,
-//   ScrollView,
-// } from 'react-native';
-// import { useNavigation } from '@react-navigation/native';
-// import { useDispatch, useSelector } from 'react-redux';
-// import { fetchTransactions } from '../../store/slices/transactionSlice';
-// import { fetchAccounts } from '../../store/slices/accountSlice';
-// import { AppDispatch, RootState } from '../../store/store';
-// import { StyleSheet } from 'react-native';
+// src/pages/home.tsx - Fixed Total Saldo + Income/Expense
 
-// const Home: React.FC = () => {
-//   const navigation = useNavigation();
-//   const dispatch = useDispatch<AppDispatch>();
-//   const { user } = useSelector((state: RootState) => state.auth);
-//   const { transactions, totalIncome, totalExpense, loading } = useSelector(
-//     (state: RootState) => state.transaction
-//   );
-//   const { accounts } = useSelector((state: RootState) => state.account);
+import React, { useState, useEffect } from "react";
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert, RefreshControl } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { transactionAPI, accountAPI } from "../services/api";
+import { useNavigation } from "@react-navigation/native";
 
-//   const [selectedMonth] = useState(new Date());
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
 
-//   React.useEffect(() => {
-//     dispatch(fetchTransactions(selectedMonth));
-//     dispatch(fetchAccounts());
-//   }, []);
+interface Category {
+  id: string;
+  name: string;
+  icon: string;
+}
 
-//   const totalBalance = totalIncome - totalExpense;
-//   const recentTransactions = transactions.slice(0, 5);
+interface Transaction {
+  id: string;
+  type: "INCOME" | "EXPENSE";
+  amount: number;
+  description: string;
+  date: string;
+  category: Category;
+  account: {
+    id: string;
+    name: string;
+    icon: string;
+  };
+}
 
-//   const handleAddTransaction = () => {
-//     navigation.navigate('AddTransaction' as never);
-//   };
+interface Account {
+  id: string;
+  name: string;
+  balance: number;
+  icon: string;
+}
 
-//   return (
-//     <ScrollView style={styles.container}>
-//       {/* Header */}
-//       <View style={styles.header}>
-//         <View>
-//           <Text style={styles.greeting}>Halo,</Text>
-//           <Text style={styles.userName}>{user?.name || 'User'}</Text>
-//         </View>
-//         <TouchableOpacity
-//           style={styles.profileButton}
-//           onPress={() => navigation.navigate('Profile' as never)}
-//         >
-//           <Text style={styles.profileIcon}>👤</Text>
-//         </TouchableOpacity>
-//       </View>
-
-//       {/* Balance Card */}
-//       <View style={styles.balanceCard}>
-//         <Text style={styles.balanceLabel}>Total Saldo</Text>
-//         <Text style={styles.balanceAmount}>
-//           Rp {totalBalance.toLocaleString('id-ID')}
-//         </Text>
-
-//         <View style={styles.balanceRow}>
-//           <View style={styles.balanceItem}>
-//             <Text style={styles.balanceItemIcon}>📈</Text>
-//             <View>
-//               <Text style={styles.balanceItemLabel}>Pemasukan</Text>
-//               <Text style={styles.incomeAmount}>
-//                 Rp {totalIncome.toLocaleString('id-ID')}
-//               </Text>
-//             </View>
-//           </View>
-
-//           <View style={styles.balanceDivider} />
-
-//           <View style={styles.balanceItem}>
-//             <Text style={styles.balanceItemIcon}>📉</Text>
-//             <View>
-//               <Text style={styles.balanceItemLabel}>Pengeluaran</Text>
-//               <Text style={styles.expenseAmount}>
-//                 Rp {totalExpense.toLocaleString('id-ID')}
-//               </Text>
-//             </View>
-//           </View>
-//         </View>
-//       </View>
-
-//       {/* Quick Actions */}
-//       <View style={styles.quickActions}>
-//         <TouchableOpacity
-//           style={styles.quickActionButton}
-//           onPress={handleAddTransaction}
-//         >
-//           <View style={styles.quickActionIcon}>
-//             <Text style={styles.quickActionEmoji}>➕</Text>
-//           </View>
-//           <Text style={styles.quickActionText}>Tambah</Text>
-//         </TouchableOpacity>
-
-//         <TouchableOpacity
-//           style={styles.quickActionButton}
-//           onPress={() => navigation.navigate('TransactionList' as never)}
-//         >
-//           <View style={styles.quickActionIcon}>
-//             <Text style={styles.quickActionEmoji}>📋</Text>
-//           </View>
-//           <Text style={styles.quickActionText}>Riwayat</Text>
-//         </TouchableOpacity>
-
-//         <TouchableOpacity
-//           style={styles.quickActionButton}
-//           onPress={() => navigation.navigate('Report' as never)}
-//         >
-//           <View style={styles.quickActionIcon}>
-//             <Text style={styles.quickActionEmoji}>📊</Text>
-//           </View>
-//           <Text style={styles.quickActionText}>Laporan</Text>
-//         </TouchableOpacity>
-
-//         <TouchableOpacity
-//           style={styles.quickActionButton}
-//           onPress={() => navigation.navigate('AccountList' as never)}
-//         >
-//           <View style={styles.quickActionIcon}>
-//             <Text style={styles.quickActionEmoji}>💳</Text>
-//           </View>
-//           <Text style={styles.quickActionText}>Akun</Text>
-//         </TouchableOpacity>
-//       </View>
-
-//       {/* Accounts Section */}
-//       <View style={styles.section}>
-//         <View style={styles.sectionHeader}>
-//           <Text style={styles.sectionTitle}>Akun Keuangan</Text>
-//           <TouchableOpacity
-//             onPress={() => navigation.navigate('AccountList' as never)}
-//           >
-//             <Text style={styles.seeAll}>Lihat Semua →</Text>
-//           </TouchableOpacity>
-//         </View>
-
-//         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-//           {accounts.slice(0, 3).map((account) => (
-//             <View key={account.id} style={styles.accountCard}>
-//               <Text style={styles.accountIcon}>{account.icon}</Text>
-//               <Text style={styles.accountName}>{account.name}</Text>
-//               <Text style={styles.accountBalance}>
-//                 Rp {account.balance.toLocaleString('id-ID')}
-//               </Text>
-//             </View>
-//           ))}
-//         </ScrollView>
-//       </View>
-
-//       {/* Recent Transactions */}
-//       <View style={styles.section}>
-//         <View style={styles.sectionHeader}>
-//           <Text style={styles.sectionTitle}>Transaksi Terbaru</Text>
-//           <TouchableOpacity
-//             onPress={() => navigation.navigate('TransactionList' as never)}
-//           >
-//             <Text style={styles.seeAll}>Lihat Semua →</Text>
-//           </TouchableOpacity>
-//         </View>
-
-//         {loading ? (
-//           <Text style={styles.loadingText}>Memuat...</Text>
-//         ) : recentTransactions.length === 0 ? (
-//           <View style={styles.emptyState}>
-//             <Text style={styles.emptyIcon}>📝</Text>
-//             <Text style={styles.emptyText}>Belum ada transaksi</Text>
-//             <TouchableOpacity
-//               style={styles.emptyButton}
-//               onPress={handleAddTransaction}
-//             >
-//               <Text style={styles.emptyButtonText}>Tambah Transaksi</Text>
-//             </TouchableOpacity>
-//           </View>
-//         ) : (
-//           recentTransactions.map((transaction) => (
-//             <View key={transaction.id} style={styles.transactionItem}>
-//               <View style={styles.transactionLeft}>
-//                 <View style={styles.transactionIcon}>
-//                   <Text>{transaction.category?.icon || '💰'}</Text>
-//                 </View>
-//                 <View>
-//                   <Text style={styles.transactionCategory}>
-//                     {transaction.category?.name}
-//                   </Text>
-//                   <Text style={styles.transactionDescription}>
-//                     {transaction.description}
-//                   </Text>
-//                 </View>
-//               </View>
-//               <Text
-//                 style={[
-//                   styles.transactionAmount,
-//                   transaction.type === 'INCOME'
-//                     ? styles.incomeText
-//                     : styles.expenseText,
-//                 ]}
-//               >
-//                 {transaction.type === 'INCOME' ? '+' : '-'}Rp{' '}
-//                 {transaction.amount.toLocaleString('id-ID')}
-//               </Text>
-//             </View>
-//           ))
-//         )}
-//       </View>
-
-//       {/* Floating Action Button */}
-//       <TouchableOpacity style={styles.fab} onPress={handleAddTransaction}>
-//         <Text style={styles.fabIcon}>+</Text>
-//       </TouchableOpacity>
-//     </ScrollView>
-//   );
-// };
-
-// export default Home;
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: '#F4F6FA', // background
-//   },
-
-//   /* === Header === */
-//   header: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     alignItems: 'center',
-//     padding: 20,
-//     paddingTop: 50,
-//     backgroundColor: '#FFFFFF', // card
-//   },
-//   greeting: {
-//     fontSize: 16,
-//     color: '#6B7280',
-//   },
-//   userName: {
-//     fontSize: 28,
-//     fontWeight: '700',
-//     color: '#111827',
-//   },
-//   profileButton: {
-//     width: 48,
-//     height: 48,
-//     borderRadius: 24,
-//     backgroundColor: '#E5E7EB',
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//   },
-//   profileIcon: {
-//     fontSize: 28,
-//   },
-
-//   /* === Balance Card === */
-//   balanceCard: {
-//     margin: 20,
-//     padding: 24,
-//     backgroundColor: '#4F46E5', // primary
-//     borderRadius: 20,
-//     shadowColor: '#4F46E5',
-//     shadowOffset: { width: 0, height: 8 },
-//     shadowOpacity: 0.3,
-//     shadowRadius: 12,
-//     elevation: 8,
-//   },
-//   balanceLabel: {
-//     fontSize: 14,
-//     color: 'rgba(255,255,255,0.8)',
-//     marginBottom: 6,
-//   },
-//   balanceAmount: {
-//     fontSize: 36,
-//     fontWeight: '700',
-//     color: '#fff',
-//     marginBottom: 24,
-//   },
-//   balanceRow: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-around',
-//   },
-//   balanceItem: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     gap: 8,
-//   },
-//   balanceItemIcon: {
-//     fontSize: 28,
-//   },
-//   balanceItemLabel: {
-//     fontSize: 12,
-//     color: 'rgba(255,255,255,0.8)',
-//   },
-//   incomeAmount: {
-//     fontSize: 16,
-//     fontWeight: '600',
-//     color: '#10B981', // green
-//   },
-//   expenseAmount: {
-//     fontSize: 16,
-//     fontWeight: '600',
-//     color: '#EF4444', // red
-//   },
-//   balanceDivider: {
-//     width: 1,
-//     height: 40,
-//     backgroundColor: 'rgba(255,255,255,0.3)',
-//   },
-
-//   /* === Quick Actions === */
-//   quickActions: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-around',
-//     paddingHorizontal: 20,
-//     marginBottom: 24,
-//   },
-//   quickActionButton: {
-//     alignItems: 'center',
-//   },
-//   quickActionIcon: {
-//     width: 56,
-//     height: 56,
-//     borderRadius: 16,
-//     backgroundColor: '#FFFFFF',
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     marginBottom: 8,
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 2 },
-//     shadowOpacity: 0.1,
-//     shadowRadius: 4,
-//     elevation: 3,
-//   },
-//   quickActionEmoji: {
-//     fontSize: 26,
-//   },
-//   quickActionText: {
-//     fontSize: 14,
-//     color: '#6B7280',
-//     fontWeight: '500',
-//   },
-
-//   /* === Section === */
-//   section: {
-//     paddingHorizontal: 20,
-//     marginBottom: 32,
-//   },
-//   sectionHeader: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     alignItems: 'center',
-//     marginBottom: 16,
-//   },
-//   sectionTitle: {
-//     fontSize: 20,
-//     fontWeight: '700',
-//     color: '#111827',
-//   },
-//   seeAll: {
-//     fontSize: 14,
-//     color: '#4F46E5',
-//     fontWeight: '500',
-//   },
-
-//   /* === Account Card === */
-//   accountCard: {
-//     width: 140,
-//     padding: 14,
-//     backgroundColor: '#FFFFFF',
-//     borderRadius: 16,
-//     marginRight: 16,
-//     alignItems: 'center',
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 4 },
-//     shadowOpacity: 0.08,
-//     shadowRadius: 8,
-//     elevation: 3,
-//   },
-//   accountIcon: {
-//     fontSize: 34,
-//     marginBottom: 8,
-//   },
-//   accountName: {
-//     fontSize: 14,
-//     color: '#111827',
-//     fontWeight: '500',
-//     marginBottom: 4,
-//     textAlign: 'center',
-//   },
-//   accountBalance: {
-//     fontSize: 16,
-//     fontWeight: '700',
-//     color: '#4F46E5',
-//     textAlign: 'center',
-//   },
-
-//   /* === Recent Transactions === */
-//   loadingText: {
-//     textAlign: 'center',
-//     color: '#6B7280',
-//     marginTop: 20,
-//   },
-//   emptyState: {
-//     alignItems: 'center',
-//     paddingVertical: 28,
-//   },
-//   emptyIcon: {
-//     fontSize: 34,
-//     marginBottom: 8,
-//   },
-//   emptyText: {
-//     fontSize: 16,
-//     color: '#6B7280',
-//     marginBottom: 16,
-//   },
-//   emptyButton: {
-//     backgroundColor: '#4F46E5',
-//     paddingVertical: 10,
-//     paddingHorizontal: 20,
-//     borderRadius: 12,
-//   },
-//   emptyButtonText: {
-//     color: '#fff',
-//     fontSize: 14,
-//     fontWeight: '600',
-//   },
-
-//   transactionItem: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     alignItems: 'center',
-//     paddingVertical: 16,
-//     borderBottomWidth: 1,
-//     borderBottomColor: '#E5E7EB',
-//   },
-//   transactionLeft: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     gap: 12,
-//   },
-//   transactionIcon: {
-//     width: 40,
-//     height: 40,
-//     borderRadius: 12,
-//     backgroundColor: '#E5E7EB',
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//   },
-//   transactionCategory: {
-//     fontSize: 16,
-//     color: '#111827',
-//     fontWeight: '500',
-//   },
-//   transactionDescription: {
-//     fontSize: 14,
-//     color: '#6B7280',
-//   },
-//   transactionAmount: {
-//     fontSize: 16,
-//     fontWeight: '600',
-//   },
-//   incomeText: {
-//     color: '#10B981',
-//   },
-//   expenseText: {
-//     color: '#EF4444',
-//   },
-
-//   /* === Floating Button === */
-//   fab: {
-//     position: 'absolute',
-//     bottom: 30,
-//     right: 20,
-//     width: 60,
-//     height: 60,
-//     borderRadius: 30,
-//     backgroundColor: '#4F46E5',
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     shadowColor: '#4F46E5',
-//     shadowOffset: { width: 0, height: 6 },
-//     shadowOpacity: 0.3,
-//     shadowRadius: 10,
-//     elevation: 6,
-//   },
-//   fabIcon: {
-//     fontSize: 34,
-//     color: '#fff',
-//     marginBottom: 2,
-//   },
-// });
-
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-} from 'react-native';
+interface TransactionStats {
+  totalIncome: number;
+  totalExpense: number;
+  totalBalance: number;
+}
 
 const Home = () => {
-  // ==== Dummy Data ====
-  const user = { name: 'Nabil' };
+  const navigation = useNavigation();
 
-  const transactions = [
-    { id: 1, type: 'INCOME', amount: 1500000, description: 'Gaji', category: { name: 'Gaji', icon: '💼' } },
-    { id: 2, type: 'EXPENSE', amount: 25000, description: 'Kopi', category: { name: 'Makanan', icon: '☕' } },
-    { id: 3, type: 'EXPENSE', amount: 100000, description: 'Bensin', category: { name: 'Transportasi', icon: '⛽' } },
-  ];
+  const [user, setUser] = useState<User | null>(null);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [stats, setStats] = useState<TransactionStats>({
+    totalIncome: 0,
+    totalExpense: 0,
+    totalBalance: 0,
+  });
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const accounts = [
-    { id: 1, name: 'Cash', balance: 500000, icon: '💵' },
-    { id: 2, name: 'Bank BCA', balance: 2500000, icon: '🏦' },
-    { id: 3, name: 'E-Wallet', balance: 700000, icon: '📱' },
-  ];
+  useEffect(() => {
+    loadData();
+    loadUserData();
+  }, []);
 
-  const totalIncome = 1500000;
-  const totalExpense = 125000;
-  const totalBalance = totalIncome - totalExpense;
-  const recentTransactions = transactions.slice(0, 5);
-
-  const handleAddTransaction = () => {
-    console.log('Tambah transaksi');
+  const loadUserData = async () => {
+    try {
+      const userData = await AsyncStorage.getItem("user");
+      if (userData) {
+        setUser(JSON.parse(userData));
+      }
+    } catch (error) {
+      console.error("Load user error:", error);
+    }
   };
 
+  const loadData = async () => {
+    try {
+      setLoading(true);
+
+      // Get current month date range
+      const now = new Date();
+      const startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
+
+      console.log("📅 Date range:", { startDate, endDate });
+
+      // Fetch accounts first
+      const accountsData = await accountAPI.getAll();
+
+      // Fetch ALL transactions (without date filter for now)
+      const allTransactions = await transactionAPI.getAll();
+
+      // Try to fetch stats with date range
+      let statsData;
+      try {
+        statsData = await transactionAPI.getStats({ startDate, endDate });
+      } catch (error) {
+        console.log("Stats API failed, calculating manually");
+        statsData = { totalIncome: 0, totalExpense: 0, totalBalance: 0 };
+      }
+
+      console.log("📊 Raw stats from API:", statsData);
+      console.log("📝 All transactions:", allTransactions.length);
+
+      // ✅ MANUAL CALCULATION: Hitung income & expense dari semua transaksi
+      const manualIncome = allTransactions.filter((t: Transaction) => t.type === "INCOME").reduce((sum: number, t: Transaction) => sum + Number(t.amount || 0), 0);
+
+      const manualExpense = allTransactions.filter((t: Transaction) => t.type === "EXPENSE").reduce((sum: number, t: Transaction) => sum + Number(t.amount || 0), 0);
+
+      // ✅ Hitung total saldo dari semua akun
+      const totalAccountBalance = accountsData.reduce((sum: number, account: Account) => {
+        return sum + (Number(account.balance) || 0);
+      }, 0);
+
+      // Use manual calculation if API stats is 0
+      const finalIncome = statsData.totalIncome || manualIncome;
+      const finalExpense = statsData.totalExpense || manualExpense;
+
+      setStats({
+        totalIncome: finalIncome,
+        totalExpense: finalExpense,
+        totalBalance: totalAccountBalance,
+      });
+
+      setTransactions(allTransactions);
+      setAccounts(accountsData);
+
+      console.log("✅ Final stats:", {
+        income: finalIncome,
+        expense: finalExpense,
+        balance: totalAccountBalance,
+        fromAPI: statsData.totalIncome > 0 ? "API" : "Manual",
+        accountsCount: accountsData.length,
+        transactionsCount: allTransactions.length,
+      });
+    } catch (error: any) {
+      console.error("❌ Load data error:", error);
+      Alert.alert("Error", error.response?.data?.error || "Gagal memuat data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  };
+
+  const handleAddTransaction = () => {
+    navigation.navigate("AddTransaction" as never);
+  };
+
+  const handleHistory = () => {
+    navigation.navigate("History" as never);
+  };
+
+  const handleReport = () => {
+    navigation.navigate("Report" as never);
+  };
+
+  const handleAccounts = () => {
+    navigation.navigate("Accounts" as never);
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#4F46E5" />
+        <Text style={styles.loadingText}>Memuat data...</Text>
+      </View>
+    );
+  }
+
+  const recentTransactions = transactions.slice(0, 5);
+
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
       {/* Header */}
       <View style={styles.header}>
         <View>
           <Text style={styles.greeting}>Halo,</Text>
-          <Text style={styles.userName}>{user.name}</Text>
+          <Text style={styles.userName}>{user?.name || "User"}</Text>
         </View>
         <TouchableOpacity style={styles.profileButton}>
           <Text style={styles.profileIcon}>👤</Text>
@@ -540,18 +192,14 @@ const Home = () => {
       {/* Balance Card */}
       <View style={styles.balanceCard}>
         <Text style={styles.balanceLabel}>Total Saldo</Text>
-        <Text style={styles.balanceAmount}>
-          Rp {totalBalance.toLocaleString('id-ID')}
-        </Text>
+        <Text style={styles.balanceAmount}>Rp {stats.totalBalance.toLocaleString("id-ID")}</Text>
 
         <View style={styles.balanceRow}>
           <View style={styles.balanceItem}>
             <Text style={styles.balanceItemIcon}>📈</Text>
             <View>
               <Text style={styles.balanceItemLabel}>Pemasukan</Text>
-              <Text style={styles.incomeAmount}>
-                Rp {totalIncome.toLocaleString('id-ID')}
-              </Text>
+              <Text style={styles.incomeAmount}>Rp {stats.totalIncome.toLocaleString("id-ID")}</Text>
             </View>
           </View>
 
@@ -561,9 +209,7 @@ const Home = () => {
             <Text style={styles.balanceItemIcon}>📉</Text>
             <View>
               <Text style={styles.balanceItemLabel}>Pengeluaran</Text>
-              <Text style={styles.expenseAmount}>
-                Rp {totalExpense.toLocaleString('id-ID')}
-              </Text>
+              <Text style={styles.expenseAmount}>Rp {stats.totalExpense.toLocaleString("id-ID")}</Text>
             </View>
           </View>
         </View>
@@ -571,31 +217,28 @@ const Home = () => {
 
       {/* Quick Actions */}
       <View style={styles.quickActions}>
-        <TouchableOpacity
-          style={styles.quickActionButton}
-          onPress={handleAddTransaction}
-        >
+        <TouchableOpacity style={styles.quickActionButton} onPress={handleAddTransaction}>
           <View style={styles.quickActionIcon}>
             <Text style={styles.quickActionEmoji}>➕</Text>
           </View>
           <Text style={styles.quickActionText}>Tambah</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.quickActionButton}>
+        <TouchableOpacity style={styles.quickActionButton} onPress={handleHistory}>
           <View style={styles.quickActionIcon}>
             <Text style={styles.quickActionEmoji}>📋</Text>
           </View>
           <Text style={styles.quickActionText}>Riwayat</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.quickActionButton}>
+        <TouchableOpacity style={styles.quickActionButton} onPress={handleReport}>
           <View style={styles.quickActionIcon}>
             <Text style={styles.quickActionEmoji}>📊</Text>
           </View>
           <Text style={styles.quickActionText}>Laporan</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.quickActionButton}>
+        <TouchableOpacity style={styles.quickActionButton} onPress={handleAccounts}>
           <View style={styles.quickActionIcon}>
             <Text style={styles.quickActionEmoji}>💳</Text>
           </View>
@@ -607,19 +250,23 @@ const Home = () => {
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Akun Keuangan</Text>
-          <Text style={styles.seeAll}>Lihat Semua →</Text>
+          <TouchableOpacity onPress={handleAccounts}>
+            <Text style={styles.seeAll}>Lihat Semua →</Text>
+          </TouchableOpacity>
         </View>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {accounts.map((account) => (
-            <View key={account.id} style={styles.accountCard}>
-              <Text style={styles.accountIcon}>{account.icon}</Text>
-              <Text style={styles.accountName}>{account.name}</Text>
-              <Text style={styles.accountBalance}>
-                Rp {account.balance.toLocaleString('id-ID')}
-              </Text>
-            </View>
-          ))}
+          {accounts.length === 0 ? (
+            <Text style={styles.emptyText}>Belum ada akun keuangan</Text>
+          ) : (
+            accounts.slice(0, 3).map((account) => (
+              <View key={account.id} style={styles.accountCard}>
+                <Text style={styles.accountIcon}>{account.icon}</Text>
+                <Text style={styles.accountName}>{account.name}</Text>
+                <Text style={styles.accountBalance}>Rp {Number(account.balance).toLocaleString("id-ID")}</Text>
+              </View>
+            ))
+          )}
         </ScrollView>
       </View>
 
@@ -627,38 +274,39 @@ const Home = () => {
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Transaksi Terbaru</Text>
-          <Text style={styles.seeAll}>Lihat Semua →</Text>
+          <TouchableOpacity onPress={handleHistory}>
+            <Text style={styles.seeAll}>Lihat Semua →</Text>
+          </TouchableOpacity>
         </View>
 
-        {recentTransactions.map((transaction) => (
-          <View key={transaction.id} style={styles.transactionItem}>
-            <View style={styles.transactionLeft}>
-              <View style={styles.transactionIcon}>
-                <Text>{transaction.category.icon}</Text>
-              </View>
-              <View>
-                <Text style={styles.transactionCategory}>
-                  {transaction.category.name}
-                </Text>
-                <Text style={styles.transactionDescription}>
-                  {transaction.description}
-                </Text>
-              </View>
-            </View>
-
-            <Text
-              style={[
-                styles.transactionAmount,
-                transaction.type === 'INCOME'
-                  ? styles.incomeText
-                  : styles.expenseText,
-              ]}
-            >
-              {transaction.type === 'INCOME' ? '+' : '-'}Rp{' '}
-              {transaction.amount.toLocaleString('id-ID')}
-            </Text>
+        {recentTransactions.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyIcon}>📭</Text>
+            <Text style={styles.emptyText}>Belum ada transaksi</Text>
+            <TouchableOpacity style={styles.emptyButton} onPress={handleAddTransaction}>
+              <Text style={styles.emptyButtonText}>Tambah Transaksi</Text>
+            </TouchableOpacity>
           </View>
-        ))}
+        ) : (
+          recentTransactions.map((transaction) => (
+            <View key={transaction.id} style={styles.transactionItem}>
+              <View style={styles.transactionLeft}>
+                <View style={styles.transactionIcon}>
+                  <Text>{transaction.category?.icon || "💰"}</Text>
+                </View>
+                <View>
+                  <Text style={styles.transactionCategory}>{transaction.category?.name}</Text>
+                  <Text style={styles.transactionDescription}>{transaction.description}</Text>
+                </View>
+              </View>
+
+              <Text style={[styles.transactionAmount, transaction.type === "INCOME" ? styles.incomeText : styles.expenseText]}>
+                {transaction.type === "INCOME" ? "+" : "-"}
+                Rp {transaction.amount.toLocaleString("id-ID")}
+              </Text>
+            </View>
+          ))
+        )}
       </View>
 
       {/* Floating Button */}
@@ -671,128 +319,170 @@ const Home = () => {
 
 export default Home;
 
-// =============================
-//         STYLES
-// =============================
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F4F6FA',
+    backgroundColor: "#F4F6FA",
   },
-
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F4F6FA",
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: "#6B7280",
+  },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 20,
     paddingTop: 50,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
-  greeting: { fontSize: 16, color: '#6B7280' },
-  userName: { fontSize: 28, fontWeight: '700', color: '#111827' },
+  greeting: { fontSize: 16, color: "#6B7280" },
+  userName: { fontSize: 28, fontWeight: "700", color: "#111827" },
   profileButton: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#E5E7EB',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#E5E7EB",
+    justifyContent: "center",
+    alignItems: "center",
   },
   profileIcon: { fontSize: 28 },
-
   balanceCard: {
     margin: 20,
     padding: 24,
-    backgroundColor: '#4F46E5',
+    backgroundColor: "#4F46E5",
     borderRadius: 20,
-    shadowColor: '#4F46E5',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
     elevation: 8,
   },
-  balanceLabel: { fontSize: 14, color: 'rgba(255,255,255,0.8)' },
-  balanceAmount: { fontSize: 36, fontWeight: '700', color: '#fff', marginBottom: 24 },
-  balanceRow: { flexDirection: 'row', justifyContent: 'space-around' },
-  balanceItem: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  balanceLabel: { fontSize: 14, color: "rgba(255,255,255,0.8)" },
+  balanceAmount: {
+    fontSize: 36,
+    fontWeight: "700",
+    color: "#fff",
+    marginBottom: 24,
+  },
+  balanceRow: { flexDirection: "row", justifyContent: "space-around" },
+  balanceItem: { flexDirection: "row", alignItems: "center", gap: 8 },
   balanceItemIcon: { fontSize: 28 },
-  balanceItemLabel: { fontSize: 12, color: 'rgba(255,255,255,0.8)' },
-  incomeAmount: { fontSize: 16, fontWeight: '600', color: '#10B981' },
-  expenseAmount: { fontSize: 16, fontWeight: '600', color: '#EF4444' },
-  balanceDivider: { width: 1, height: 40, backgroundColor: 'rgba(255,255,255,0.3)' },
-
+  balanceItemLabel: { fontSize: 12, color: "rgba(255,255,255,0.8)" },
+  incomeAmount: { fontSize: 16, fontWeight: "600", color: "#10B981" },
+  expenseAmount: { fontSize: 16, fontWeight: "600", color: "#EF4444" },
+  balanceDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: "rgba(255,255,255,0.3)",
+  },
   quickActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexDirection: "row",
+    justifyContent: "space-around",
     paddingHorizontal: 20,
     marginBottom: 24,
   },
-  quickActionButton: { alignItems: 'center' },
+  quickActionButton: { alignItems: "center" },
   quickActionIcon: {
     width: 56,
     height: 56,
     borderRadius: 16,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 8,
     elevation: 3,
   },
   quickActionEmoji: { fontSize: 26 },
-  quickActionText: { fontSize: 14, color: '#6B7280', fontWeight: '500' },
-
+  quickActionText: { fontSize: 14, color: "#6B7280", fontWeight: "500" },
   section: { paddingHorizontal: 20, marginBottom: 32 },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  sectionTitle: { fontSize: 20, fontWeight: '700', color: '#111827' },
-  seeAll: { fontSize: 14, color: '#4F46E5', fontWeight: '500' },
-
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  sectionTitle: { fontSize: 20, fontWeight: "700", color: "#111827" },
+  seeAll: { fontSize: 14, color: "#4F46E5", fontWeight: "500" },
   accountCard: {
     width: 140,
     padding: 14,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 16,
     marginRight: 16,
-    alignItems: 'center',
+    alignItems: "center",
     elevation: 3,
   },
   accountIcon: { fontSize: 34, marginBottom: 8 },
-  accountName: { fontSize: 14, color: '#111827', fontWeight: '500', marginBottom: 4, textAlign: 'center' },
-  accountBalance: { fontSize: 16, fontWeight: '700', color: '#4F46E5', textAlign: 'center' },
-
+  accountName: {
+    fontSize: 14,
+    color: "#111827",
+    fontWeight: "500",
+    marginBottom: 4,
+    textAlign: "center",
+  },
+  accountBalance: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#4F46E5",
+    textAlign: "center",
+  },
+  emptyState: {
+    alignItems: "center",
+    paddingVertical: 28,
+  },
+  emptyIcon: { fontSize: 34, marginBottom: 8 },
+  emptyText: {
+    fontSize: 16,
+    color: "#6B7280",
+    marginBottom: 16,
+  },
+  emptyButton: {
+    backgroundColor: "#4F46E5",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+  },
+  emptyButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
   transactionItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: "#E5E7EB",
   },
-  transactionLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  transactionLeft: { flexDirection: "row", alignItems: "center", gap: 12 },
   transactionIcon: {
     width: 40,
     height: 40,
-    backgroundColor: '#E5E7EB',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#E5E7EB",
+    justifyContent: "center",
+    alignItems: "center",
     borderRadius: 12,
   },
-  transactionCategory: { fontSize: 16, fontWeight: '500', color: '#111827' },
-  transactionDescription: { fontSize: 14, color: '#6B7280' },
-  transactionAmount: { fontSize: 16, fontWeight: '600' },
-  incomeText: { color: '#10B981' },
-  expenseText: { color: '#EF4444' },
-
+  transactionCategory: { fontSize: 16, fontWeight: "500", color: "#111827" },
+  transactionDescription: { fontSize: 14, color: "#6B7280" },
+  transactionAmount: { fontSize: 16, fontWeight: "600" },
+  incomeText: { color: "#10B981" },
+  expenseText: { color: "#EF4444" },
   fab: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 30,
     right: 20,
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#4F46E5',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#4F46E5",
+    justifyContent: "center",
+    alignItems: "center",
     elevation: 6,
   },
-  fabIcon: { fontSize: 34, color: '#fff' },
+  fabIcon: { fontSize: 34, color: "#fff" },
 });
-
