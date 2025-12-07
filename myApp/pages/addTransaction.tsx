@@ -81,6 +81,18 @@ export default function AddTransaction() {
       Alert.alert("Error", "Masukkan deskripsi");
       return;
     }
+    if (type === "expense") {
+    const selectedAcc = accounts.find(acc => acc.id === selectedAccount);
+    const transactionAmount = parseFloat(amount);
+    
+    if (selectedAcc && transactionAmount > selectedAcc.balance) {
+      Alert.alert(
+        "Saldo Tidak Cukup", 
+        `Saldo ${selectedAcc.name}: Rp ${selectedAcc.balance.toLocaleString("id-ID")}\nJumlah pengeluaran: Rp ${transactionAmount.toLocaleString("id-ID")}\n\nSaldo kurang Rp ${(transactionAmount - selectedAcc.balance).toLocaleString("id-ID")}`
+      );
+      return;
+    }
+  }
 
     try {
       setLoading(true);

@@ -2,12 +2,28 @@
 
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Constants from "expo-constants";
 
-// PENTING: Ganti sesuai device Anda!
-// Untuk Android Emulator: http://10.0.2.2:3000/api
-// Untuk iOS Simulator: http://localhost:3000/api
-// Untuk Physical Device: http://192.168.x.x:3000/api (IP komputer)
-const API_URL = "http://10.226.221.44:3000/api";
+// ==================== AUTO DETECT API URL ====================
+// Fungsi untuk auto-detect IP dari Expo Dev Server
+const getApiUrl = (): string => {
+  // Expo menyimpan IP dev server di Constants
+  const debuggerHost = Constants.expoConfig?.hostUri;
+  
+  if (debuggerHost) {
+    const host = debuggerHost.split(':')[0];
+    const apiUrl = `http://${host}:3000/api`;
+    console.log("✅ Auto-detected API URL:", apiUrl);
+    return apiUrl;
+  }
+  
+  // Fallback jika tidak ketemu
+  console.warn("⚠️ Could not auto-detect IP, using fallback");
+  return "http://192.168.18.11:3000/api";
+};
+
+// Auto-detect API URL
+const API_URL = getApiUrl();
 
 console.log("Using API URL:", API_URL);
 
