@@ -19,7 +19,7 @@ const getApiUrl = (): string => {
   
   // Fallback jika tidak ketemu
   console.warn("⚠️ Could not auto-detect IP, using fallback");
-  return "http://192.168.18.11:3000/api";
+  return "http://192.168.18.12:3000/api";
 };
 
 // Auto-detect API URL
