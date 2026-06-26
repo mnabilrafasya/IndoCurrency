@@ -1,10 +1,21 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Alert, StyleSheet, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Alert,
+  StyleSheet,
+  ActivityIndicator,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { authAPI } from "../services/api";
 
 export default function Login() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,16 +35,33 @@ export default function Login() {
       await authAPI.login({ email, password });
 
       console.log("✅ Login successful");
-      Alert.alert("Berhasil", "Login berhasil!", [
-        {
-          text: "OK",
-          onPress: () => navigation.navigate("Home" as never),
-        },
-      ]);
+
+      if (Platform.OS === "web") {
+        // Jika di browser, gunakan alert bawaan browser (window.alert)
+        alert("Login berhasil!");
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Home" as never }],
+        });
+      } else {
+        // Jika di HP (Android/iOS), gunakan Alert native React Native
+        Alert.alert("Berhasil", "Login berhasil!", [
+          {
+            text: "OK",
+            onPress: () => {
+              navigation.reset({
+                index: 0,
+                routes: [{ name: "Home" as never }],
+              });
+            },
+          },
+        ]);
+      }
     } catch (error: any) {
       console.error("❌ Login error:", error);
 
-      const errorMessage = error.response?.data?.error || error.message || "Login gagal";
+      const errorMessage =
+        error.response?.data?.error || error.message || "Login gagal";
       Alert.alert("Login Gagal", errorMessage);
     } finally {
       setLoading(false);
@@ -41,7 +69,10 @@ export default function Login() {
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.container}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+    >
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Text style={styles.logo}>💰</Text>
@@ -52,25 +83,60 @@ export default function Login() {
         <View style={styles.form}>
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Email</Text>
-            <TextInput style={styles.input} placeholder="nama@email.com" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} editable={!loading} />
+            <TextInput
+              style={styles.input}
+              placeholder="nama@email.com"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              editable={!loading}
+            />
           </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Password</Text>
             <View style={styles.passwordContainer}>
-              <TextInput style={styles.passwordInput} placeholder="••••••••" value={password} onChangeText={setPassword} secureTextEntry={!showPassword} autoCapitalize="none" editable={!loading} />
-              <TouchableOpacity style={styles.eyeButton} onPress={() => setShowPassword(!showPassword)} disabled={loading}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="••••••••"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                editable={!loading}
+              />
+              <TouchableOpacity
+                style={styles.eyeButton}
+                onPress={() => setShowPassword(!showPassword)}
+                disabled={loading}
+              >
                 <Text style={styles.eyeIcon}>{showPassword ? "👁️" : "👁️‍🗨️"}</Text>
               </TouchableOpacity>
             </View>
           </View>
 
-          <TouchableOpacity style={styles.forgotPassword} onPress={() => Alert.alert("Info", "Fitur lupa password belum tersedia")} disabled={loading}>
+          <TouchableOpacity
+            style={styles.forgotPassword}
+            onPress={() =>
+              Alert.alert("Info", "Fitur lupa password belum tersedia")
+            }
+            disabled={loading}
+          >
             <Text style={styles.forgotPasswordText}>Lupa Password?</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.button, loading && styles.buttonDisabled]} onPress={handleLogin} disabled={loading}>
-            {loading ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.buttonText}>Masuk</Text>}
+          <TouchableOpacity
+            style={[styles.button, loading && styles.buttonDisabled]}
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.buttonText}>Masuk</Text>
+            )}
           </TouchableOpacity>
 
           <View style={styles.divider}>
@@ -79,9 +145,14 @@ export default function Login() {
             <View style={styles.dividerLine} />
           </View>
 
-          <TouchableOpacity style={styles.registerLink} onPress={() => navigation.navigate("Register" as never)} disabled={loading}>
+          <TouchableOpacity
+            style={styles.registerLink}
+            onPress={() => navigation.navigate("Register" as never)}
+            disabled={loading}
+          >
             <Text style={styles.registerText}>
-              Belum punya akun? <Text style={styles.registerTextBold}>Daftar Sekarang</Text>
+              Belum punya akun?{" "}
+              <Text style={styles.registerTextBold}>Daftar Sekarang</Text>
             </Text>
           </TouchableOpacity>
         </View>
